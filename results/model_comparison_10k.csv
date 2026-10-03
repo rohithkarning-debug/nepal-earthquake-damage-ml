@@ -1,0 +1,7 @@
+Model,Accuracy,Macro_F1,Weighted_F1
+KNN,0.6503,0.5739,0.6435
+Baseline MLP,0.6356,0.5477,0.6175
+Improved MLP (32,16),0.6608,0.5824,0.6460
+Baseline Random Forest,0.7235,0.6629,0.7177
+Tuned Random Forest,0.7231,0.6620,0.7173
+CatBoost (Geographic Categorical),0.7556,0.7002,0.7507
