@@ -64,11 +64,11 @@ if input_mode == "Upload CSV":
             st.write(missing)
             st.stop()
         st.write(f"Loaded {len(df):,} buildings.")
-        st.dataframe(df.head(10), use_container_width=True)
+        st.dataframe(df.head(10), width="stretch")
         if st.button("Predict damage", type="primary"):
             predictions = predict_dataframe(df, model)
             st.success(f"Generated {len(predictions):,} predictions.")
-            st.dataframe(predictions.head(20), use_container_width=True)
+            st.dataframe(predictions.head(20), width="stretch")
             st.download_button(
                 "Download predictions CSV",
                 data=predictions.to_csv(index=False).encode("utf-8"),
@@ -83,13 +83,13 @@ else:
         st.stop()
     sample = pd.read_csv(sample_path)
     st.write("Demo input:")
-    st.dataframe(sample, use_container_width=True)
+    st.dataframe(sample, width="stretch")
     if st.button("Predict demo building", type="primary"):
         prediction = predict_dataframe(sample, model)
         grade = int(prediction.iloc[0]["damage_grade"])
         st.metric("Predicted Damage Grade", f"Grade {grade}")
         st.info(DAMAGE_LABELS[grade])
-        st.dataframe(prediction, use_container_width=True)
+        st.dataframe(prediction, width="stretch")
 
 st.divider()
 st.markdown("**Model:** CatBoostClassifier  •  **Validation Accuracy:** 74.67%  •  **Validation Macro F1:** 0.6934")

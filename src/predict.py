@@ -21,6 +21,27 @@ CAT_COLUMNS = OBJECT_CATEGORICAL_COLUMNS + GEO_COLUMNS
 TARGET_COLUMN = "damage_grade"
 ID_COLUMN = "building_id"
 
+# The 38 predictive features in the exact order used to train the final model.
+# CatBoost maps DataFrame columns by position, so inputs must follow this order.
+# Used as a fallback when the loaded model does not carry its own feature names.
+FEATURE_COLUMNS = [
+    "geo_level_1_id", "geo_level_2_id", "geo_level_3_id",
+    "count_floors_pre_eq", "age", "area_percentage", "height_percentage",
+    "land_surface_condition", "foundation_type", "roof_type", "ground_floor_type",
+    "other_floor_type", "position", "plan_configuration",
+    "has_superstructure_adobe_mud", "has_superstructure_mud_mortar_stone",
+    "has_superstructure_stone_flag", "has_superstructure_cement_mortar_stone",
+    "has_superstructure_mud_mortar_brick", "has_superstructure_cement_mortar_brick",
+    "has_superstructure_timber", "has_superstructure_bamboo",
+    "has_superstructure_rc_non_engineered", "has_superstructure_rc_engineered",
+    "has_superstructure_other", "legal_ownership_status", "count_families",
+    "has_secondary_use", "has_secondary_use_agriculture", "has_secondary_use_hotel",
+    "has_secondary_use_rental", "has_secondary_use_institution", "has_secondary_use_school",
+    "has_secondary_use_industry", "has_secondary_use_health_post",
+    "has_secondary_use_gov_office", "has_secondary_use_use_police",
+    "has_secondary_use_other",
+]
+
 
 def load_model(model_path: str | Path):
     """Load the serialized CatBoost model."""
@@ -30,19 +51,39 @@ def load_model(model_path: str | Path):
     return joblib.load(path)
 
 
-def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Prepare raw building records exactly as the final CatBoost model expects."""
-    data = df.copy()
-    if ID_COLUMN in data.columns:
-        data = data.drop(columns=[ID_COLUMN])
+def expected_feature_names(model) -> list[str]:
+    """Return the feature names, in training order, that the model expects.
 
-    required = set(CAT_COLUMNS)
-    missing = sorted(required - set(data.columns))
+    CatBoost exposes these as ``feature_names_`` when trained on a DataFrame. If the
+    attribute is absent, empty, or holds only CatBoost's default positional names
+    ("0", "1", ...), fall back to the documented training order.
+    """
+    names = list(getattr(model, "feature_names_", None) or [])
+    if names and not all(str(name).isdigit() for name in names):
+        return [str(name) for name in names]
+    return list(FEATURE_COLUMNS)
+
+
+def prepare_features(df: pd.DataFrame, feature_names: Iterable[str] | None = None) -> pd.DataFrame:
+    """Prepare raw building records exactly as the final CatBoost model expects.
+
+    Selects the model's features in training order, which drops ``building_id``,
+    ``damage_grade`` and any other extra columns, and casts categorical columns to str.
+    """
+    features = list(feature_names) if feature_names is not None else list(FEATURE_COLUMNS)
+
+    missing = [col for col in features if col not in df.columns]
     if missing:
-        raise ValueError(f"Missing required categorical columns: {missing}")
+        raise ValueError(
+            f"Input is missing {len(missing)} required feature column(s): {missing}. "
+            f"Expected all {len(features)} model features."
+        )
+
+    data = df[features].copy()
 
     for col in CAT_COLUMNS:
-        data[col] = data[col].astype(str)
+        if col in data.columns:
+            data[col] = data[col].astype(str)
 
     return data
 
@@ -52,7 +93,7 @@ def predict_dataframe(
     model,
 ) -> pd.DataFrame:
     """Return building_id and predicted damage_grade for raw building records."""
-    features = prepare_features(df)
+    features = prepare_features(df, expected_feature_names(model))
     predictions = model.predict(features).ravel()
     predictions = pd.Series(predictions, index=df.index).astype(int)
 
