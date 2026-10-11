@@ -93,6 +93,10 @@ nepal-earthquake-damage-ml/
 └── docs/
 ```
 
+## Requirements
+
+Requirements: Python 3.11 or newer.
+
 ## Setup
 
 Create a virtual environment, then install dependencies:
@@ -102,6 +106,16 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 ```
+
+## Data
+
+The dataset comes from the DrivenData competition "Richter's Predictor: Modeling Earthquake Damage", which uses building data from the 2015 Nepal Earthquake Open Data Portal (see `docs/reference_paper_cs229.pdf`, Sections 2 and 4). It consists of three CSV files:
+
+- `train_values.csv` — 260,601 buildings: `building_id` plus 38 features
+- `train_labels.csv` — `building_id` and `damage_grade` (1, 2 or 3) for each training building
+- `test_values.csv` — 86,868 buildings: `building_id` plus the same 38 features, without labels
+
+Download the three files from the competition and place them in `data/` (see `data/README.md`). They are gitignored and are only needed for retraining or for batch predictions on the test set; the Streamlit demo and the tests run without them.
 
 ## Run the Streamlit demo
 
@@ -131,6 +145,14 @@ predict_csv(
     "models/final_model.joblib",
     "results/predictions.csv",
 )
+```
+
+## Running tests
+
+After `pip install -r requirements.txt`, run `pytest` from the repo root:
+
+```bash
+pytest
 ```
 
 ## Demo note
