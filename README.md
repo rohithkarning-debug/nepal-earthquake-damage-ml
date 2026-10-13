@@ -74,10 +74,13 @@ The production prediction file is `results/nepal_earthquake_final_predictions.cs
 nepal-earthquake-damage-ml/
 ├── README.md
 ├── requirements.txt
+├── pytest.ini
 ├── app.py
 ├── train.py
 ├── src/
 │   └── predict.py
+├── tests/
+│   └── test_predict.py
 ├── notebooks/
 │   └── Nepal_Earthquake_ML_Project_Final.ipynb
 ├── models/
@@ -115,7 +118,7 @@ The dataset comes from the DrivenData competition "Richter's Predictor: Modeling
 - `train_labels.csv` — `building_id` and `damage_grade` (1, 2 or 3) for each training building
 - `test_values.csv` — 86,868 buildings: `building_id` plus the same 38 features, without labels
 
-Download the three files from the competition and place them in `data/` (see `data/README.md`). They are gitignored and are only needed for retraining or for batch predictions on the test set; the Streamlit demo and the tests run without them.
+Download the three files from the competition (https://www.drivendata.org/competitions/57/nepal-earthquake/) and place them in `data/` (see `data/README.md`). They are gitignored and are only needed for retraining or for batch predictions on the test set; the Streamlit demo and the tests run without them.
 
 ## Run the Streamlit demo
 
