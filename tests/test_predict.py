@@ -70,3 +70,25 @@ def test_predict_dataframe_rejects_invalid_damage_grades():
 
     with pytest.raises(ValueError, match="unexpected damage grade"):
         predict_dataframe(df, InvalidModel())
+
+
+def test_find_input_problems_reports_blank_and_non_numeric_values():
+    from src.predict import find_input_problems
+
+    df = pd.DataFrame({
+        "age": ["ten", 5],
+        "foundation_type": [None, "r"],
+    })
+
+    problems = find_input_problems(df, feature_names=["age", "foundation_type"])
+
+    assert any("'age' must be a number" in p for p in problems)
+    assert any("'foundation_type' is blank" in p for p in problems)
+
+
+def test_find_input_problems_accepts_valid_input():
+    from src.predict import find_input_problems
+
+    df = pd.DataFrame({"age": [10], "foundation_type": ["r"]})
+
+    assert find_input_problems(df, feature_names=["age", "foundation_type"]) == []

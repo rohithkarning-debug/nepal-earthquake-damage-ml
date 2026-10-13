@@ -43,6 +43,51 @@ FEATURE_COLUMNS = [
 ]
 
 
+# Category codes that appear in the training data (the dataset anonymises them as letters).
+CATEGORY_CODES = {
+    "land_surface_condition": ["n", "o", "t"],
+    "foundation_type": ["h", "i", "r", "u", "w"],
+    "roof_type": ["n", "q", "x"],
+    "ground_floor_type": ["f", "m", "v", "x", "z"],
+    "other_floor_type": ["j", "q", "s", "x"],
+    "position": ["j", "o", "s", "t"],
+    "plan_configuration": ["a", "c", "d", "f", "m", "n", "o", "q", "s", "u"],
+    "legal_ownership_status": ["a", "r", "v", "w"],
+}
+
+
+def find_input_problems(df: pd.DataFrame, feature_names: Iterable[str] | None = None) -> list[str]:
+    """Return readable problems that would stop a prediction (empty list if the input is fine).
+
+    Checks for missing columns, blank cells, and non-numeric values in numeric columns.
+    """
+    features = list(feature_names) if feature_names is not None else list(FEATURE_COLUMNS)
+    problems: list[str] = []
+
+    missing = [col for col in features if col not in df.columns]
+    if missing:
+        problems.append(f"Missing {len(missing)} required column(s): {', '.join(missing)}")
+        return problems
+
+    for col in features:
+        blank_rows = df.index[df[col].isna()].tolist()
+        if blank_rows:
+            problems.append(f"'{col}' is blank in row(s) {_rows(blank_rows)}")
+            continue
+        if col not in CAT_COLUMNS:
+            numeric = pd.to_numeric(df[col], errors="coerce")
+            bad_rows = df.index[numeric.isna()].tolist()
+            if bad_rows:
+                example = df.loc[bad_rows[0], col]
+                problems.append(f"'{col}' must be a number, but row(s) {_rows(bad_rows)} contain values like '{example}'")
+    return problems
+
+
+def _rows(index_values: list) -> str:
+    shown = ", ".join(str(int(i) + 1) for i in index_values[:5])
+    return shown + (" ..." if len(index_values) > 5 else "")
+
+
 def load_model(model_path: str | Path):
     """Load the serialized CatBoost model."""
     path = Path(model_path)

@@ -123,7 +123,7 @@ Download the three files from the competition and place them in `data/` (see `da
 streamlit run app.py
 ```
 
-The demo supports a CSV upload and also includes a one-row sample input.
+The demo has three modes: enter a building's values in a form, upload a CSV, or use a one-row sample input.
 
 ## Retrain the final model
 
